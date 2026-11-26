@@ -71,7 +71,7 @@ RIGHT = (333.0, 205.0)
 BOTTOM = (225.0, 335.0)
 BOTTOM_R = 52
 SUB_LABEL_Y = 270  # top of the reading under each side sub-dial
-TIDE_BOX = (157, 281, 136, 96)  # x, y, w, h
+TIDE_BOX = (147, 281, 156, 96)  # x, y, w, h
 TIDE_GRAPH = (165, 293, 120, 38)  # where the companion's tide image goes
 FORECAST_HOURS = 12
 MARK = 18  # forecast mark size
@@ -306,22 +306,23 @@ def tide_name_text(name, x, y, w, h, size, color, mode="both"):
 
 def moon(mode):
     """Fish mode: the moon's shape (28 images), an age pointer on the rim and
-    the tide name under it."""
+    the tide name under it. MOON_PHASE_POSITION is not a whole number on the
+    watch, so the shape is picked by its floor."""
     cx, cy = LEFT
     accent = ACCENT[mode]
-    shapes = choose("moonShape", [(str(p), f"[MOON_PHASE_POSITION] == {p}",
+    shapes = choose("moonShape", [(str(p), f"floor([MOON_PHASE_POSITION]) == {p}",
                                    image(f"moon{p}", f"moon_{p:02d}", cx - 20, cy - 26, 40, 40)) for p in range(28)])
     pointer = group("moonAge", image("moonAgeTri", f"tri_{mode}", 52, 3, 8, 7),
                     turn="[MOON_PHASE_POSITION] / 28 * 360", box=sub_box(LEFT))
-    labels = (tide_name_text("tideName", cx - 30, cy + 25, 60, 18, 12, accent)
-              + text("moonAgeText", cx - 50, SUB_LABEL_Y, 100, 14, 10, TEXT,
-                     template("MOON AGE %d", f"floor({MOON_AGE})"), spacing=0.1))
+    labels = (tide_name_text("tideName", cx - 30, cy + 24, 60, 20, 14, accent)
+              + text("moonAgeText", cx - 75, SUB_LABEL_Y, 150, 18, 13, TEXT,
+                     template("MOON AGE %d", f"floor({MOON_AGE})"), spacing=0.05, family=FONT_BOLD))
     return group("moon", shapes + pointer + labels, mode="active")
 
 
 def ambient_moon(mode):
     cx, cy = C, 300.0
-    shapes = choose("aodMoonShape", [(str(p), f"[MOON_PHASE_POSITION] == {p}",
+    shapes = choose("aodMoonShape", [(str(p), f"floor([MOON_PHASE_POSITION]) == {p}",
                                       image(f"aodMoon{p}", f"moon_amb_{p:02d}", cx - 12, cy - 12, 24, 24))
                                      for p in range(28)])
     return group("aodMoon", shapes + tide_name_text("aodTideName", C - 40, 318, 80, 16, 12, AMB), mode="ambient")
@@ -439,10 +440,10 @@ def tide_graph_parts():
 def tide_times_parts():
     """SHORT_TEXT: text = next high water, title = next low water."""
     x, y, w, h = TIDE_BOX
-    return (text("tideTimes", x + 4, y + 70, w - 8, 18, 11, TEXT,
-                 template("満潮 %s  干潮 %s", "[COMPLICATION.TEXT]", "[COMPLICATION.TITLE]"), family=SYSTEM_FONT,
+    return (text("tideTimes", x + 4, y + 68, w - 8, 22, 14, TEXT,
+                 template("満潮 %s 干潮 %s", "[COMPLICATION.TEXT]", "[COMPLICATION.TITLE]"), family=SYSTEM_FONT,
                  mode="active")
-            + text("aodTide", C - 80, 337, 160, 18, 12, AMB, template("満潮 %s", "[COMPLICATION.TEXT]"),
+            + text("aodTide", C - 80, 336, 160, 20, 14, AMB, template("満潮 %s", "[COMPLICATION.TEXT]"),
                    family=SYSTEM_FONT, mode="ambient"))
 
 
