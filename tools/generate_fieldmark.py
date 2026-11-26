@@ -240,7 +240,7 @@ def dial(mode):
     base = ticks(MINUTE_TICK_R + 2.5, MINUTE_TICK_R - 2.5, 60, DIM, 1) + hours + tri
     label = {"camp": "CAMP · AUTOMATIC", "fish": "TIDE · AUTOMATIC"}[mode]
     print_ = (text(f"brand{mode}", C - 80, 74, 160, 18, 14, EDGE, "FIELDMARK", family=FONT_BOLD, spacing=0.28)
-              + text(f"label{mode}", C - 80, 90, 160, 12, 8, accent, label, spacing=0.3)
+              + text(f"label{mode}", C - 100, 90, 200, 12, 8, accent, label, spacing=0.3)
               + draw(f"dateWin{mode}", rect(C - 13, 105, 26, 18, DIM, 1.2, radius=2))
               + text(f"date{mode}", C - 13, 106, 26, 16, 12, TEXT, template("%d", "[DAY]"), family=FONT_BOLD))
 
@@ -411,12 +411,14 @@ def sun_parts(mode):
     max = sunset in minutes after midnight, text = sunrise, title = sunset."""
     cx, cy = RIGHT
     accent = ACCENT[mode]
-    to_angle = lambda m: f"{m} / 1440 * 360 + 180"
-    day = (f'<Arc centerX="{cx:g}" centerY="{cy:g}" width="88" height="88" startAngle="270" endAngle="90">'
-           f'{stroke(accent, 3, "ROUND")}'
-           f'<Transform target="startAngle" value="{to_angle("[COMPLICATION.RANGED_VALUE_MIN]")}"/>'
-           f'<Transform target="endAngle" value="{to_angle("[COMPLICATION.RANGED_VALUE_MAX]")}"/></Arc>')
-    return (draw("dayArc", day, mode="active")
+    # Turn a group to sunrise and sweep the arc from 0 by the length of the day:
+    # an Arc's endAngle transform from a fixed start is the form that is known to work.
+    sweep = "([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]) / 1440 * 360"
+    arc_ = (f'<Arc centerX="{SUB_R}" centerY="{SUB_R}" width="88" height="88" startAngle="0" endAngle="0">'
+            f'{stroke(accent, 3, "ROUND")}<Transform target="endAngle" value="{sweep}"/></Arc>')
+    day = group("dayArcTurn", draw("dayArcDraw", arc_, box=box_attr(0, 0, 2 * SUB_R, 2 * SUB_R)),
+                turn="[COMPLICATION.RANGED_VALUE_MIN] / 1440 * 360 + 180", box=sub_box(RIGHT), mode="active")
+    return (day
             + text("sunText", cx - 55, SUB_LABEL_Y, 110, 14, 10, TEXT,
                    template("SUN %s – %s", "[COMPLICATION.TEXT]", "[COMPLICATION.TITLE]"), spacing=0.1, mode="active")
             + text("aodSun", C - 80, 327, 160, 18, 13, AMB, template("SUNSET %s", "[COMPLICATION.TITLE]"),
