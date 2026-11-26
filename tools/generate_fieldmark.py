@@ -395,9 +395,9 @@ def wind_parts(mode, center):
     arrow = group(f"windArrow{mode}", image(f"windArrowImg{mode}", f"wind_arrow_{mode}", SUB_R - 5, SUB_R - 43, 10, 66),
                   turn="[COMPLICATION.RANGED_VALUE_VALUE]", box=sub_box(center), mode="active")
     cap = draw(f"windCap{mode}", disc(3.5, "FF000000", cx, cy, EDGE, 1.2), mode="active")
-    reading = text(f"windText{mode}", cx - 55, SUB_LABEL_Y, 110, 14, 10, TEXT,
-                   template("WIND %s %s m/s", "[COMPLICATION.TITLE]", "[COMPLICATION.TEXT]"), spacing=0.1,
-                   mode="active")
+    reading = text(f"windText{mode}", cx - 75, SUB_LABEL_Y, 150, 18, 13, TEXT,
+                   template("WIND %s %s m/s", "[COMPLICATION.TITLE]", "[COMPLICATION.TEXT]"), spacing=0.05,
+                   family=FONT_BOLD, mode="active")
     out = arrow + cap + reading
     if mode == "camp":
         out += text("aodWind", C - 80, 345, 160, 16, 11, AMB,
@@ -419,8 +419,9 @@ def sun_parts(mode):
     day = group("dayArcTurn", draw("dayArcDraw", arc_, box=box_attr(0, 0, 2 * SUB_R, 2 * SUB_R)),
                 turn="[COMPLICATION.RANGED_VALUE_MIN] / 1440 * 360 + 180", box=sub_box(RIGHT), mode="active")
     return (day
-            + text("sunText", cx - 55, SUB_LABEL_Y, 110, 14, 10, TEXT,
-                   template("SUN %s – %s", "[COMPLICATION.TEXT]", "[COMPLICATION.TITLE]"), spacing=0.1, mode="active")
+            + text("sunText", cx - 75, SUB_LABEL_Y, 150, 18, 13, TEXT,
+                   template("SUN %s – %s", "[COMPLICATION.TEXT]", "[COMPLICATION.TITLE]"), spacing=0.05,
+                   family=FONT_BOLD, mode="active")
             + text("aodSun", C - 80, 327, 160, 18, 13, AMB, template("SUNSET %s", "[COMPLICATION.TITLE]"),
                    spacing=0.15, mode="ambient"))
 
@@ -756,14 +757,14 @@ def preview_png():
     layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
     layer.paste(arrow, P(cx - 5, cy - 43))
     img.alpha_composite(layer.rotate(45, center=P(cx, cy), resample=Image.BICUBIC))
-    txt(cx, SUB_LABEL_Y + 7, "WIND NW 3.2 m/s", 10, TEXT)
+    txt(cx, SUB_LABEL_Y + 9, "WIND NW 3.2 m/s", 13, TEXT, FONT_BOLD)
     sx, sy = RIGHT
     ring(sx, sy, 44, TRACK, 3)
     d.arc([*P(sx - 44, sy - 44), *P(sx + 44, sy + 44)], start=6.2 / 24 * 360 + 90, end=16.6 / 24 * 360 + 90,
           fill=rgba(accent), width=3 * k)
     for h in (6, 12, 18, 24):
         txt(*point(h * 15 + 180, 30, sx, sy), str(h), 7.5, MUTED)
-    txt(sx, SUB_LABEL_Y + 7, "SUN 06:13 – 16:38", 10, TEXT)
+    txt(sx, SUB_LABEL_Y + 9, "SUN 06:13 – 16:38", 13, TEXT, FONT_BOLD)
     sun = Image.open(DRAWABLE / "sun_hand_camp.png").resize((10 * k, 53 * k), Image.LANCZOS)
     layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
     layer.paste(sun, P(sx - 5, sy - 45))
