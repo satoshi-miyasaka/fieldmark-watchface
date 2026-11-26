@@ -86,10 +86,10 @@ DOW = ("SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT")
 # only heavy rain, thunderstorms and heavy snow get the strong marks.
 FORECAST_MARKS = (
     ("dry", (1, 2, 3, 8, 13, 14, 15)),
-    ("rainL", (6, 12)),
-    ("rainH", (4, 9)),
-    ("snowL", (7, 11)),
-    ("snowH", (5,)),
+    ("rain_l", (6, 12)),
+    ("rain_h", (4, 9)),
+    ("snow_l", (7, 11)),
+    ("snow_h", (5,)),
     ("sleet", (10,)),
 )
 # The current weather icon in camp mode.
@@ -630,14 +630,14 @@ def forecast_images():
             c = Canvas(MARK, MARK, scale=3)
             if kind == "dry":
                 c.circle(h, h, 1.6, fill=RING)
-            elif kind == "rainL":
+            elif kind == "rain_l":
                 drop(c, h, h, 3.8, outline=rain, width=1.4)
-            elif kind == "rainH":
+            elif kind == "rain_h":
                 drop(c, h - 3.4, h + 1.2, 3.2, fill=rain)
                 drop(c, h + 3.4, h - 1.6, 3.2, fill=rain)
-            elif kind == "snowL":
+            elif kind == "snow_l":
                 flake(c, h, h, 4.5, snow, 1.3)
-            elif kind == "snowH":
+            elif kind == "snow_h":
                 flake(c, h - 3.8, h + 1.6, 3.6, snow, 1.6)
                 flake(c, h + 3.8, h - 2.0, 3.6, snow, 1.6)
             else:  # sleet: a drop and a flake side by side
@@ -771,7 +771,7 @@ def preview_png():
     img.alpha_composite(icon, P(bx - 14, by - 44))
     txt(bx, by, "15°", 22, TEXT, FONT_BOLD)
     txt(bx, by + 18, "L7° H17°", 9, MUTED)
-    sample = ("dry", "dry", "rainL", "rainL", "rainH", "rainH", "rainL", "sleet", "snowL", "snowH", "snowL", "dry")
+    sample = ("dry", "dry", "rain_l", "rain_l", "rain_h", "rain_h", "rain_l", "sleet", "snow_l", "snow_h", "snow_l", "dry")
     for i, kind in enumerate(sample):
         mark = Image.open(DRAWABLE / f"fc_{kind}.png").resize((MARK * k, MARK * k), Image.LANCZOS)
         x, y = point((10 + i + 0.5) * 30, HOUR_MARK_R)
