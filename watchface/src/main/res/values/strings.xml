@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">FIELDMARK</string>
+    <string name="cfg_mode">モード</string>
+    <string name="mode_camp">キャンプ</string>
+    <string name="mode_fish">釣り</string>
+    <string name="cfg_sec_hand">秒針</string>
+    <string name="sec_hand_tick">1秒ごと</string>
+    <string name="sec_hand_off">なし(電池を節約)</string>
+    <string name="slot_wind">風 (FIELDMARK アプリ)</string>
+    <string name="slot_sun">日の出・日の入り (FIELDMARK アプリ)</string>
+    <string name="slot_tide_graph">タイドグラフ (FIELDMARK アプリ)</string>
+    <string name="slot_tide_times">満潮・干潮 (FIELDMARK アプリ)</string>
+</resources>

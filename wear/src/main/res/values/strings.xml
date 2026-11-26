@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">FIELDMARK</string>
+    <string name="source_wind">FIELDMARK 風</string>
+    <string name="source_sun">FIELDMARK 日の出・日の入り</string>
+    <string name="source_tide_graph">FIELDMARK タイドグラフ</string>
+    <string name="source_tide_times">FIELDMARK 満潮・干潮</string>
+</resources>
