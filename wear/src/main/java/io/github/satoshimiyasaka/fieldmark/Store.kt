@@ -95,7 +95,8 @@ object Store {
         for (source in listOf(
             WindDataSource::class.java,
             SunDataSource::class.java,
-            TideGraphDataSource::class.java,
+            TideCurveADataSource::class.java,
+            TideCurveBDataSource::class.java,
             TideTimesDataSource::class.java,
         )) {
             ComplicationDataSourceUpdateRequester

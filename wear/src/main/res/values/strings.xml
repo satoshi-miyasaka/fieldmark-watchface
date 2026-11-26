@@ -3,6 +3,7 @@
     <string name="app_name">FIELDMARK</string>
     <string name="source_wind">FIELDMARK 風</string>
     <string name="source_sun">FIELDMARK 日の出・日の入り</string>
-    <string name="source_tide_graph">FIELDMARK タイドグラフ</string>
+    <string name="source_tide_a">FIELDMARK タイドグラフ 0〜14時</string>
+    <string name="source_tide_b">FIELDMARK タイドグラフ 14〜24時</string>
     <string name="source_tide_times">FIELDMARK 満潮・干潮</string>
 </resources>

@@ -1,15 +1,9 @@
 package io.github.satoshimiyasaka.fieldmark
 
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Path
-import android.graphics.drawable.Icon
 import androidx.wear.watchface.complications.data.ComplicationData
 import androidx.wear.watchface.complications.data.ComplicationType
+import androidx.wear.watchface.complications.data.GoalProgressComplicationData
 import androidx.wear.watchface.complications.data.NoDataComplicationData
-import androidx.wear.watchface.complications.data.PhotoImageComplicationData
 import androidx.wear.watchface.complications.data.PlainComplicationText
 import androidx.wear.watchface.complications.data.RangedValueComplicationData
 import androidx.wear.watchface.complications.data.ShortTextComplicationData
@@ -153,85 +147,49 @@ class TideTimesDataSource : FieldDataSource(ComplicationType.SHORT_TEXT) {
             .build()
 }
 
-/** PHOTO_IMAGE: today's tide from 0 to 24 h, drawn to fit the face's tide window. */
-class TideGraphDataSource : FieldDataSource(ComplicationType.PHOTO_IMAGE) {
+/**
+ * GOAL_PROGRESS: the day's tide as 13 heights (0-63) at 0, 2, ... 24 h, four
+ * to a number: value holds points first..first+3, target - 1 the next ones.
+ * A carries points 0-7 and B 7-12, so the face can draw each slot's segments
+ * on its own. A timeline switches to tomorrow's curve at midnight.
+ */
+abstract class TideCurveDataSource(private val first: Int, private val count: Int) :
+    FieldDataSource(ComplicationType.GOAL_PROGRESS) {
 
     override fun answer(s: Snapshot, now: Long, zone: ZoneId, listener: ComplicationRequestListener) {
         val today = Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
-        val first = TideImage.draw(s, today, zone)?.let(::photo)
-        if (first == null) {
+        val curve = { date: LocalDate -> Field.tideCurve(s.tideTimes, s.tideHeights, startOfDay(date, zone)) }
+        val todays = curve(today)?.let(::data)
+        if (todays == null) {
             listener.onComplicationData(NoDataComplicationData())
             return
         }
         val entries = ArrayList<TimelineEntry>()
-        TideImage.draw(s, today.plusDays(1), zone)?.let {
+        curve(today.plusDays(1))?.let {
             val start = Instant.ofEpochMilli(startOfDay(today.plusDays(1), zone))
-            entries += TimelineEntry(TimeInterval(start, start.plusSeconds(24 * 3600)), photo(it))
+            entries += TimelineEntry(TimeInterval(start, start.plusSeconds(24 * 3600)), data(it))
         }
-        listener.onComplicationDataTimeline(ComplicationDataTimeline(first, entries))
+        listener.onComplicationDataTimeline(ComplicationDataTimeline(todays, entries))
     }
 
     override fun preview(): ComplicationData {
-        val zone = ZoneId.systemDefault()
-        val today = LocalDate.now(zone)
-        val from = startOfDay(today, zone)
-        val times = LongArray(49) { from + it * 3600_000L }
-        val heights = DoubleArray(49) {
-            0.8 * Math.cos(2 * Math.PI * (it - 5.2) / 12.42) + 0.2 * Math.cos(2 * Math.PI * (it - 5.2) / 24.84)
+        val heights = DoubleArray(Field.TIDE_POINTS) {
+            Math.cos(2 * Math.PI * (it * 2 - 5.2) / 12.42) + 0.25 * Math.cos(2 * Math.PI * (it * 2 - 5.2) / 24.84)
         }
-        val sample = Snapshot(
-            Double.NaN, Double.NaN, 0, Double.NaN, Double.NaN, 0,
-            longArrayOf(from + (6 * 60 + 13) * 60_000L), longArrayOf(from + (16 * 60 + 38) * 60_000L),
-            times, heights, 0, Double.NaN, Double.NaN, 0, "",
-        )
-        return photo(TideImage.draw(sample, today, zone)!!)
+        val times = LongArray(Field.TIDE_POINTS) { it * 2 * 3600_000L }
+        return data(Field.tideCurve(times, heights, 0)!!)
     }
 
-    private fun photo(bitmap: Bitmap): ComplicationData =
-        PhotoImageComplicationData.Builder(Icon.createWithBitmap(bitmap), plain("タイドグラフ")).build()
-}
-
-/** Draws the tide curve at twice the face's pixels (the window is 120 x 38). */
-object TideImage {
-    private const val W = 240
-    private const val H = 76
-    private const val PAD = 6f
-    private val ACCENT = Color.rgb(0xE3, 0xA4, 0x46)
-
-    fun draw(s: Snapshot, date: LocalDate, zone: ZoneId): Bitmap? {
-        val from = startOfDay(date, zone)
-        val to = startOfDay(date.plusDays(1), zone)
-        val points = s.tideTimes.indices
-            .filter { s.tideTimes[it] in from..to && !s.tideHeights[it].isNaN() }
-            .map { s.tideTimes[it] to s.tideHeights[it] }
-        if (points.size < 12) return null
-        val lo = points.minOf { it.second }
-        val hi = points.maxOf { it.second }
-        val span = (hi - lo).takeIf { it > 1e-6 } ?: 1.0
-        val x = { t: Long -> ((t - from).toFloat() / (to - from)) * W }
-        val y = { h: Double -> (PAD + (1 - (h - lo) / span) * (H - 2 * PAD - 4)).toFloat() }
-
-        val bitmap = Bitmap.createBitmap(W, H, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bitmap)
-        val path = Path()
-        points.forEachIndexed { i, (t, h) ->
-            if (i == 0) path.moveTo(x(t), y(h)) else path.lineTo(x(t), y(h))
-        }
-        canvas.drawPath(path, Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            style = Paint.Style.STROKE
-            strokeWidth = 3.2f
-            strokeJoin = Paint.Join.ROUND
-            color = ACCENT
-        })
-        // Daylight as a thin bar along the bottom.
-        val rise = s.sunrise.firstOrNull { it in from until to }
-        val set = s.sunset.firstOrNull { it in from until to }
-        if (rise != null && set != null && set > rise) {
-            canvas.drawRect(x(rise), H - 3f, x(set), H.toFloat(), Paint().apply {
-                color = ACCENT
-                alpha = 180
-            })
-        }
-        return bitmap
+    private fun data(points: IntArray): ComplicationData {
+        val value = Field.pack(points, first, minOf(4, count))
+        val target = Field.pack(points, first + 4, count - 4) + 1
+        // GOAL_PROGRESS must carry a text; the face only reads the two numbers.
+        return GoalProgressComplicationData.Builder(value.toFloat(), target.toFloat(), plain("タイドグラフ"))
+            .setText(plain("Tide"))
+            .build()
     }
 }
+
+class TideCurveADataSource : TideCurveDataSource(0, 8)
+
+class TideCurveBDataSource : TideCurveDataSource(7, 6)

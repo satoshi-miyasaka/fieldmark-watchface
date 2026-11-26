@@ -28,7 +28,7 @@
             </intent-filter>
         </activity>
 
-        <!-- Four data sources feed the FIELDMARK watch face's fixed slots. -->
+        <!-- Five data sources feed the FIELDMARK watch face's fixed slots. -->
         <service
             android:name=".WindDataSource"
             android:exported="true"
@@ -64,17 +64,34 @@
         </service>
 
         <service
-            android:name=".TideGraphDataSource"
+            android:name=".TideCurveADataSource"
             android:exported="true"
             android:icon="@drawable/ic_fieldmark"
-            android:label="@string/source_tide_graph"
+            android:label="@string/source_tide_a"
             android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
             <intent-filter>
                 <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" />
             </intent-filter>
             <meta-data
                 android:name="android.support.wearable.complications.SUPPORTED_TYPES"
-                android:value="PHOTO_IMAGE" />
+                android:value="GOAL_PROGRESS" />
+            <meta-data
+                android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
+                android:value="3600" />
+        </service>
+
+        <service
+            android:name=".TideCurveBDataSource"
+            android:exported="true"
+            android:icon="@drawable/ic_fieldmark"
+            android:label="@string/source_tide_b"
+            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" />
+            </intent-filter>
+            <meta-data
+                android:name="android.support.wearable.complications.SUPPORTED_TYPES"
+                android:value="GOAL_PROGRESS" />
             <meta-data
                 android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
                 android:value="3600" />

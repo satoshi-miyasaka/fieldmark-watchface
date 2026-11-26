@@ -66,6 +66,26 @@ class FieldTest {
     }
 
     @Test
+    fun tideCurveAndPacking() {
+        val hour = 3600_000L
+        val times = LongArray(30) { it * hour }
+        val heights = DoubleArray(30) { it.toDouble() }  // rising steadily
+        val curve = Field.tideCurve(times, heights, 0)!!
+        assertEquals(13, curve.size)
+        assertEquals(0, curve[0])
+        assertEquals(63, curve[12])
+        assertTrue((0 until 12).all { curve[it] <= curve[it + 1] })
+        // Not covering 24 h is no curve.
+        assertNull(Field.tideCurve(times, heights, 10 * hour))
+        // Packing, read back the way the face reads it: floor(x / 64^k) % 64.
+        val packed = Field.pack(intArrayOf(1, 2, 3, 63), 0, 4)
+        assertEquals(1 + 2 * 64 + 3 * 4096 + 63 * 262144, packed)
+        assertTrue(packed < (1 shl 24))  // exact in a float
+        assertEquals(63, (packed / 262144) % 64)
+        assertEquals(0, Field.pack(intArrayOf(5), 1, 0))
+    }
+
+    @Test
     fun distance() {
         // Tokyo to Yokohama, about 27 km.
         val d = Field.distanceKm(35.68, 139.77, 35.44, 139.64)

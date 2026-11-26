@@ -44,6 +44,40 @@ object Field {
     fun next(extremes: List<Extreme>, now: Long, high: Boolean): Extreme? =
         extremes.firstOrNull { it.time > now && it.high == high }
 
+    const val TIDE_POINTS = 13
+    private const val TIDE_STEP = 2 * 3600_000L
+
+    /**
+     * The tide from `from` to 24 h later as 13 heights scaled to 0-63 (the
+     * day's lowest to highest), by straight lines between the hourly values.
+     * Null when the series does not cover the whole day.
+     */
+    fun tideCurve(times: LongArray, heights: DoubleArray, from: Long): IntArray? {
+        val raw = DoubleArray(TIDE_POINTS)
+        for (i in 0 until TIDE_POINTS) raw[i] = interpolate(times, heights, from + i * TIDE_STEP) ?: return null
+        val lo = raw.min()
+        val span = raw.max() - lo
+        return IntArray(TIDE_POINTS) { if (span < 1e-6) 32 else Math.round((raw[it] - lo) / span * 63).toInt() }
+    }
+
+    private fun interpolate(times: LongArray, heights: DoubleArray, t: Long): Double? {
+        for (i in 0 until times.size - 1) {
+            if (t < times[i] || t > times[i + 1]) continue
+            val a = heights[i]
+            val b = heights[i + 1]
+            if (a.isNaN() || b.isNaN()) return null
+            return a + (b - a) * (t - times[i]).toDouble() / (times[i + 1] - times[i])
+        }
+        return null
+    }
+
+    /** count (at most 4) values of 0-63 from points[start], the first in the lowest 6 bits. */
+    fun pack(points: IntArray, start: Int, count: Int): Int {
+        var v = 0
+        for (k in count - 1 downTo 0) v = v * 64 + points[start + k]
+        return v
+    }
+
     class Forecast(
         val windDirection: Double,
         val windSpeed: Double,
