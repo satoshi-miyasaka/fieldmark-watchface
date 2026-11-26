@@ -336,18 +336,22 @@ def sun_hand(mode):
 
 
 def current_weather(mode):
-    """Camp mode: icon, temperature, low/high and chance of rain."""
+    """Camp mode: icon, temperature, today's low/high and chance of rain.
+
+    The runtime rejects WEATHER.TEMPERATURE_LOW/HIGH and the plain chance of
+    precipitation even though the schema lists them (the whole face fails to
+    load), so they are read from today's forecast, WEATHER.DAYS.0."""
     cx, cy = BOTTOM
     ok = "[WEATHER.IS_AVAILABLE] && !([WEATHER.IS_ERROR])"
-    icon = choose("wxNow", [(k, f"{ok} && ({is_any('[WEATHER.CONDITION]', v)})",
+    icon = choose("wxNow", [(k, f"{ok} && ({is_any('[WEATHER.HOURS.0.CONDITION]', v)})",
                              image(f"wxNow{k}", f"wx_{k}_{mode}", cx - 14, cy - 44, 28, 28))
                             for k, v in WEATHER_ICONS])
     readings = (text("wxTemp", cx - 40, cy - 14, 80, 26, 22, TEXT, template("%d°", "[WEATHER.TEMPERATURE]"),
                      family=FONT_BOLD)
                 + text("wxHiLo", cx - 46, cy + 12, 92, 12, 9, MUTED,
-                       template("L%d° H%d°", "[WEATHER.TEMPERATURE_LOW]", "[WEATHER.TEMPERATURE_HIGH]"), spacing=0.08)
+                       template("L%d° H%d°", "[WEATHER.DAYS.0.TEMPERATURE_LOW]", "[WEATHER.DAYS.0.TEMPERATURE_HIGH]"), spacing=0.08)
                 + text("wxPop", cx - 46, cy + 24, 92, 14, 10, MUTED,
-                       template("降水 %d％", "[WEATHER.CHANCE_OF_PRECIPITATION]"), family=SYSTEM_FONT))
+                       template("降水 %d％", "[WEATHER.DAYS.0.CHANCE_OF_PRECIPITATION]"), family=SYSTEM_FONT))
     none = text("wxNone", cx - 40, cy - 14, 80, 26, 22, MUTED, "--°", family=FONT_BOLD)
     return group("wxNowGroup", icon + condition("wxOk", ok, readings, none), mode="active")
 
